@@ -144,13 +144,6 @@ class CatanGame(Game):
             settlement[i, j] = distance * connected
         return settlement
 
-    def settlement_availability(self, settlements):
-        settlement = np.zeros(settlements.shape)
-        padded = np.pad(settlements.copy(), 1, constant_values=(0, ))
-        for i, j in zip(*(self.SETTLEMENT_MASK * (settlements == 0)).nonzero()):
-            settlement[i, j] = ((padded[i:i + 3, j:j + 3] * self.settlement_adjacency[(i + j) % 2]).sum() == 0)
-        return (settlement != 0).any()
-
     def getBoardSize(self):
         return self.height, self.width
 
@@ -192,7 +185,7 @@ class CatanGame(Game):
             return 1
         elif (settlements < 0).sum() >= self.victory_points:
             return -1
-        elif not self.settlement_availability(settlements):
+        elif self.getValidMoves(board, player)[-1] == 1 and self.getValidMoves(board, player * -1)[-1] == 1:
             return 1e-4
 
         # Game hasn't ended yet
@@ -297,13 +290,13 @@ class SmallGame(CatanGame):
         [0, 1, 1, 1, 1, 1, 0],
     ])
     ROAD_MASK = np.array([
-        [0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 0, 0],
         [0, 1, 0, 1, 0, 1, 0],
         [1, 1, 1, 1, 1, 1, 0],
         [1, 0, 1, 0, 1, 0, 1],
         [1, 1, 1, 1, 1, 1, 0],
         [0, 1, 0, 1, 0, 1, 0],
-        [0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 0, 0],
     ])
 
     DEFAULT_START_BOARD = np.array([
