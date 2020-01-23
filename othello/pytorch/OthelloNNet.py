@@ -10,6 +10,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
+
 class OthelloNNet(nn.Module):
     def __init__(self, game, args):
         # game params
