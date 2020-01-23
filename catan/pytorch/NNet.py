@@ -1,31 +1,36 @@
+import argparse
 import os
+import shutil
 import time
-
+import random
 import numpy as np
-import torch
-from torch import optim
-
-from NeuralNet import NeuralNet
+import math
+import sys
+sys.path.append('../../')
+from utils import *
 from pytorch_classification.utils import AverageMeter
-from pytorch_classification.utils.progress.progress.bar import Bar
-from utils import dotdict
+from NeuralNet import NeuralNet
 
-from othello.pytorch.OthelloNNet import OthelloNNet as onnet
+import argparse
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import datasets, transforms
+
+from .OthelloNNet import OthelloNNet as onnet
 
 args = dotdict({
     'lr': 0.001,
     'dropout': 0.3,
     'epochs': 10,
     'batch_size': 64,
-    'cuda': False,
-    'num_channels': 1,
+    'cuda': torch.cuda.is_available(),
+    'num_channels': 512,
 })
-
 
 class NNetWrapper(NeuralNet):
     def __init__(self, game):
-        super().__init__(game)
-
         self.nnet = onnet(game, args)
         self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
@@ -99,10 +104,14 @@ class NNetWrapper(NeuralNet):
                 bar.next()
             bar.finish()
 
+
     def predict(self, board):
         """
         board: np array with board
         """
+        # timing
+        start = time.time()
+
         # preparing input
         board = torch.FloatTensor(board.astype(np.float64))
         if args.cuda: board = board.contiguous().cuda()
@@ -111,6 +120,7 @@ class NNetWrapper(NeuralNet):
         with torch.no_grad():
             pi, v = self.nnet(board)
 
+        #print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
         return torch.exp(pi).data.cpu().numpy()[0], v.data.cpu().numpy()[0]
 
     def loss_pi(self, targets, outputs):
@@ -138,4 +148,3 @@ class NNetWrapper(NeuralNet):
         map_location = None if args.cuda else 'cpu'
         checkpoint = torch.load(filepath, map_location=map_location)
         self.nnet.load_state_dict(checkpoint['state_dict'])
-
