@@ -14,6 +14,7 @@ from utils import *
 
 import argparse
 
+
 def create_parser():
     """Creates a parser for command-line arguments.
     """
@@ -35,6 +36,7 @@ def create_parser():
     parser.add_argument('--numItersForTrainExamplesHistory', type=int, default=10)
 
     return parser
+
 
 if __name__ == "__main__":
     parser = create_parser()
